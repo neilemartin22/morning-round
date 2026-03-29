@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import type { Settings } from "@/lib/settings-store";
 
 function SavedIndicator({ show }: { show: boolean }) {
   return (
@@ -35,67 +36,90 @@ function useSavedFlash() {
 }
 
 export default function SettingsPage() {
-  const [apiKey, setApiKey] = useState("");
-  const [apiKeyRevealed, setApiKeyRevealed] = useState(false);
-  const [readingFolder, setReadingFolder] = useState("~/HBR-Reading");
-  const [weekdayTime, setWeekdayTime] = useState("07:00");
-  const [weekendTime, setWeekendTime] = useState("13:00");
-  const [weekdayArticles, setWeekdayArticles] = useState(3);
-  const [weekendArticles, setWeekendArticles] = useState(5);
-  const [includeLessonsWeekday, setIncludeLessonsWeekday] = useState(true);
-  const [includeLessonsWeekend, setIncludeLessonsWeekend] = useState(true);
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [loading, setLoading] = useState(true);
   const [showJournalList, setShowJournalList] = useState(false);
   const [showRssList, setShowRssList] = useState(false);
+  const [apiKeyRevealed, setApiKeyRevealed] = useState(false);
 
-  const apiKeySaved = useSavedFlash();
-  const scheduleSaved = useSavedFlash();
-  const folderSaved = useSavedFlash();
+  const saveFlash = useSavedFlash();
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const weekdayMinutes = weekdayArticles * 8 + (includeLessonsWeekday ? 20 : 0);
-  const weekendMinutes = weekendArticles * 8 + (includeLessonsWeekend ? 20 : 0);
+  // Load settings on mount
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch("/api/settings");
+        const data = await res.json();
+        if (data.ok) {
+          setSettings(data.settings);
+        }
+      } catch {
+        // Fall back to defaults — they'll be created on first save
+      }
+      setLoading(false);
+    }
+    load();
+  }, []);
 
-  const journals = [
-    "Int J Radiat Oncol Biol Phys (Red Journal)",
-    "Radiother Oncol (Green Journal)",
-    "J Clin Oncol",
-    "Lancet Oncol",
-    "Pract Radiat Oncol",
-    "Int J Radiat Oncol",
-    "Nat Med",
-    "JAMA Oncol",
-    "N Engl J Med",
-    "Cancer",
-    "Br J Cancer",
-    "Clin Cancer Res",
-    "Phys Med Biol",
-    "Med Phys",
-    "Adv Radiat Oncol",
-    "Brachytherapy",
-    "J Radiat Res",
-    "Strahlenther Onkol",
-    "Radiat Oncol",
-    "Semin Radiat Oncol",
-  ];
-
-  const rssFeeds = [
-    "Harvard Business Review",
-    "MIT Sloan Management Review",
-    "McKinsey Quarterly",
-    "First Round Review",
-    "Stanford GSB Insights",
-    "Wharton Knowledge",
-    "INSEAD Knowledge",
-    "Strategy+Business",
-    "Kellogg Insight",
-    "London Business School Review",
-  ];
-
-  const [journalChecks, setJournalChecks] = useState<boolean[]>(
-    () => journals.map(() => true)
+  // Auto-save with debounce
+  const persistSettings = useCallback(
+    (updated: Settings) => {
+      setSettings(updated);
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(async () => {
+        try {
+          await fetch("/api/settings", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updated),
+          });
+          saveFlash.flash();
+        } catch {
+          // Silent failure
+        }
+      }, 500);
+    },
+    [saveFlash]
   );
-  const [rssChecks, setRssChecks] = useState<boolean[]>(
-    () => rssFeeds.map(() => true)
-  );
+
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, []);
+
+  if (loading || !settings) {
+    return (
+      <>
+        <header className="flex items-center h-12 px-8 max-w-[720px] mx-auto w-full">
+          <Link
+            href="/"
+            className="font-serif text-base font-semibold text-ink hover:text-ink-secondary transition-colors"
+          >
+            Morning Round
+          </Link>
+        </header>
+        <main className="mx-auto max-w-[720px] w-full px-8 pb-16 mt-4">
+          <p className="font-sans text-sm text-ink-tertiary">
+            Loading settings&hellip;
+          </p>
+        </main>
+      </>
+    );
+  }
+
+  const weekdayMinutes =
+    settings.schedule.weekdayArticles * 8 +
+    (settings.schedule.includeLessonsWeekday ? 20 : 0);
+  const weekendMinutes =
+    settings.schedule.weekendArticles * 8 +
+    (settings.schedule.includeLessonsWeekend ? 20 : 0);
+
+  function update(fn: (s: Settings) => Settings) {
+    if (!settings) return;
+    persistSettings(fn(settings));
+  }
 
   return (
     <>
@@ -106,6 +130,7 @@ export default function SettingsPage() {
         >
           Morning Round
         </Link>
+        <SavedIndicator show={saveFlash.show} />
       </header>
 
       <main className="mx-auto max-w-[720px] w-full px-8 pb-16 mt-4">
@@ -126,11 +151,13 @@ export default function SettingsPage() {
           <div className="flex items-center gap-3 mb-2">
             <input
               type={apiKeyRevealed ? "text" : "password"}
-              value={apiKey}
-              onChange={(e) => {
-                setApiKey(e.target.value);
-                apiKeySaved.flash();
-              }}
+              value={settings.pubmed.apiKey}
+              onChange={(e) =>
+                update((s) => ({
+                  ...s,
+                  pubmed: { ...s.pubmed, apiKey: e.target.value },
+                }))
+              }
               placeholder="Paste your API key"
               className="flex-1 font-mono text-sm bg-transparent border-b border-border focus:border-umber outline-none py-1.5 text-ink placeholder:text-ink-tertiary"
             />
@@ -140,12 +167,11 @@ export default function SettingsPage() {
             >
               {apiKeyRevealed ? "Hide" : "Reveal"}
             </button>
-            {apiKey && (
+            {settings.pubmed.apiKey && (
               <span className="font-sans text-xs text-sage">
                 &#10003; Connected
               </span>
             )}
-            <SavedIndicator show={apiKeySaved.show} />
           </div>
           <p className="font-sans text-xs text-ink-tertiary mb-4">
             An API key removes rate limits on PubMed queries.{" "}
@@ -165,7 +191,8 @@ export default function SettingsPage() {
               Journal selection
             </span>
             <span className="font-sans text-xs text-ink-tertiary">
-              Monitoring {journalChecks.filter(Boolean).length} journals.
+              Monitoring{" "}
+              {settings.pubmed.journalEnabled.filter(Boolean).length} journals.
             </span>
             <button
               onClick={() => setShowJournalList(!showJournalList)}
@@ -181,16 +208,24 @@ export default function SettingsPage() {
 
           {showJournalList && (
             <div className="mb-4 pl-1 space-y-1.5">
-              {journals.map((j, i) => (
-                <label key={j} className="flex items-center gap-2 cursor-pointer">
+              {settings.pubmed.journals.map((j, i) => (
+                <label
+                  key={j}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
                   <input
                     type="checkbox"
-                    checked={journalChecks[i]}
-                    onChange={() => {
-                      const next = [...journalChecks];
-                      next[i] = !next[i];
-                      setJournalChecks(next);
-                    }}
+                    checked={settings.pubmed.journalEnabled[i]}
+                    onChange={() =>
+                      update((s) => {
+                        const next = [...s.pubmed.journalEnabled];
+                        next[i] = !next[i];
+                        return {
+                          ...s,
+                          pubmed: { ...s.pubmed, journalEnabled: next },
+                        };
+                      })
+                    }
                     className="accent-umber"
                   />
                   <span className="font-sans text-sm text-ink-secondary">
@@ -220,17 +255,21 @@ export default function SettingsPage() {
           <div className="flex items-center gap-3 mb-2">
             <input
               type="text"
-              value={readingFolder}
-              onChange={(e) => {
-                setReadingFolder(e.target.value);
-                folderSaved.flash();
-              }}
+              value={settings.leadership.readingFolder}
+              onChange={(e) =>
+                update((s) => ({
+                  ...s,
+                  leadership: {
+                    ...s.leadership,
+                    readingFolder: e.target.value,
+                  },
+                }))
+              }
               className="flex-1 font-mono text-sm bg-transparent border-b border-border focus:border-umber outline-none py-1.5 text-ink"
             />
             <button className="font-sans text-xs text-umber border border-border-subtle rounded-sm px-2.5 py-1 hover:border-border transition-colors">
               Browse
             </button>
-            <SavedIndicator show={folderSaved.show} />
           </div>
           <p className="font-sans text-xs text-ink-tertiary mb-4">
             Drop PDFs or saved web pages into the{" "}
@@ -248,7 +287,8 @@ export default function SettingsPage() {
               RSS discovery feeds
             </span>
             <span className="font-sans text-xs text-ink-tertiary">
-              {rssChecks.filter(Boolean).length} sources active.
+              {settings.leadership.rssEnabled.filter(Boolean).length} sources
+              active.
             </span>
             <button
               onClick={() => setShowRssList(!showRssList)}
@@ -260,19 +300,24 @@ export default function SettingsPage() {
 
           {showRssList && (
             <div className="mb-4 pl-1 space-y-1.5">
-              {rssFeeds.map((feed, i) => (
+              {settings.leadership.rssSources.map((feed, i) => (
                 <label
                   key={feed}
                   className="flex items-center gap-2 cursor-pointer"
                 >
                   <input
                     type="checkbox"
-                    checked={rssChecks[i]}
-                    onChange={() => {
-                      const next = [...rssChecks];
-                      next[i] = !next[i];
-                      setRssChecks(next);
-                    }}
+                    checked={settings.leadership.rssEnabled[i]}
+                    onChange={() =>
+                      update((s) => {
+                        const next = [...s.leadership.rssEnabled];
+                        next[i] = !next[i];
+                        return {
+                          ...s,
+                          leadership: { ...s.leadership, rssEnabled: next },
+                        };
+                      })
+                    }
                     className="accent-umber"
                   />
                   <span className="font-sans text-sm text-ink-secondary">
@@ -300,18 +345,17 @@ export default function SettingsPage() {
               <span className="font-sans text-sm text-ink-secondary">
                 Weekday session
               </span>
-              <div className="flex items-center gap-2">
-                <input
-                  type="time"
-                  value={weekdayTime}
-                  onChange={(e) => {
-                    setWeekdayTime(e.target.value);
-                    scheduleSaved.flash();
-                  }}
-                  className="font-sans text-sm bg-transparent border-b border-border-subtle focus:border-umber outline-none py-0.5 text-ink"
-                />
-                <SavedIndicator show={scheduleSaved.show} />
-              </div>
+              <input
+                type="time"
+                value={settings.schedule.weekdayTime}
+                onChange={(e) =>
+                  update((s) => ({
+                    ...s,
+                    schedule: { ...s.schedule, weekdayTime: e.target.value },
+                  }))
+                }
+                className="font-sans text-sm bg-transparent border-b border-border-subtle focus:border-umber outline-none py-0.5 text-ink"
+              />
             </div>
             <div className="flex items-center justify-between">
               <span className="font-sans text-sm text-ink-secondary">
@@ -319,11 +363,13 @@ export default function SettingsPage() {
               </span>
               <input
                 type="time"
-                value={weekendTime}
-                onChange={(e) => {
-                  setWeekendTime(e.target.value);
-                  scheduleSaved.flash();
-                }}
+                value={settings.schedule.weekendTime}
+                onChange={(e) =>
+                  update((s) => ({
+                    ...s,
+                    schedule: { ...s.schedule, weekendTime: e.target.value },
+                  }))
+                }
                 className="font-sans text-sm bg-transparent border-b border-border-subtle focus:border-umber outline-none py-0.5 text-ink"
               />
             </div>
@@ -347,15 +393,20 @@ export default function SettingsPage() {
                   type="number"
                   min={1}
                   max={10}
-                  value={weekdayArticles}
-                  onChange={(e) => {
-                    setWeekdayArticles(Number(e.target.value));
-                    scheduleSaved.flash();
-                  }}
+                  value={settings.schedule.weekdayArticles}
+                  onChange={(e) =>
+                    update((s) => ({
+                      ...s,
+                      schedule: {
+                        ...s.schedule,
+                        weekdayArticles: Number(e.target.value),
+                      },
+                    }))
+                  }
                   className="w-10 text-center bg-transparent border-b border-border-subtle focus:border-umber outline-none text-ink"
                 />{" "}
                 articles
-                {includeLessonsWeekday ? " + 1 lesson" : ""}
+                {settings.schedule.includeLessonsWeekday ? " + 1 lesson" : ""}
                 <span className="text-ink-tertiary ml-3">
                   ~{weekdayMinutes} min
                 </span>
@@ -370,15 +421,20 @@ export default function SettingsPage() {
                   type="number"
                   min={1}
                   max={10}
-                  value={weekendArticles}
-                  onChange={(e) => {
-                    setWeekendArticles(Number(e.target.value));
-                    scheduleSaved.flash();
-                  }}
+                  value={settings.schedule.weekendArticles}
+                  onChange={(e) =>
+                    update((s) => ({
+                      ...s,
+                      schedule: {
+                        ...s.schedule,
+                        weekendArticles: Number(e.target.value),
+                      },
+                    }))
+                  }
                   className="w-10 text-center bg-transparent border-b border-border-subtle focus:border-umber outline-none text-ink"
                 />{" "}
                 articles
-                {includeLessonsWeekend ? " + 1 lesson" : ""}
+                {settings.schedule.includeLessonsWeekend ? " + 1 lesson" : ""}
                 <span className="text-ink-tertiary ml-3">
                   ~{weekendMinutes} min
                 </span>
@@ -409,7 +465,16 @@ export default function SettingsPage() {
 
           <div className="mb-4">
             <p className="font-sans text-sm text-ink-secondary mb-1">Pace</p>
-            <select className="font-sans text-sm bg-transparent border-b border-border-subtle focus:border-umber outline-none py-0.5 text-ink">
+            <select
+              value={settings.lessons.pace}
+              onChange={(e) =>
+                update((s) => ({
+                  ...s,
+                  lessons: { ...s.lessons, pace: e.target.value },
+                }))
+              }
+              className="font-sans text-sm bg-transparent border-b border-border-subtle focus:border-umber outline-none py-0.5 text-ink"
+            >
               <option>1 lesson per session</option>
               <option>1 lesson every other session</option>
               <option>2 lessons per session</option>
@@ -423,8 +488,17 @@ export default function SettingsPage() {
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={includeLessonsWeekday}
-                onChange={() => setIncludeLessonsWeekday(!includeLessonsWeekday)}
+                checked={settings.schedule.includeLessonsWeekday}
+                onChange={() =>
+                  update((s) => ({
+                    ...s,
+                    schedule: {
+                      ...s.schedule,
+                      includeLessonsWeekday:
+                        !s.schedule.includeLessonsWeekday,
+                    },
+                  }))
+                }
                 className="accent-umber"
               />
               <span className="font-sans text-sm text-ink-secondary">
@@ -434,8 +508,17 @@ export default function SettingsPage() {
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={includeLessonsWeekend}
-                onChange={() => setIncludeLessonsWeekend(!includeLessonsWeekend)}
+                checked={settings.schedule.includeLessonsWeekend}
+                onChange={() =>
+                  update((s) => ({
+                    ...s,
+                    schedule: {
+                      ...s.schedule,
+                      includeLessonsWeekend:
+                        !s.schedule.includeLessonsWeekend,
+                    },
+                  }))
+                }
                 className="accent-umber"
               />
               <span className="font-sans text-sm text-ink-secondary">
@@ -460,11 +543,33 @@ export default function SettingsPage() {
           </p>
 
           <div className="space-y-2">
-            <button className="font-sans text-sm text-clay hover:underline underline-offset-2">
+            <button
+              onClick={async () => {
+                if (!confirm("Clear all reading history? This cannot be undone.")) return;
+                try {
+                  await fetch("/api/articles/clear", { method: "POST" });
+                  saveFlash.flash();
+                } catch { /* silent */ }
+              }}
+              className="font-sans text-sm text-clay hover:underline underline-offset-2"
+            >
               Clear all reading history
             </button>
             <br />
-            <button className="font-sans text-sm text-clay hover:underline underline-offset-2">
+            <button
+              onClick={async () => {
+                if (!confirm("Reset all settings to defaults?")) return;
+                try {
+                  const res = await fetch("/api/settings", { method: "DELETE" });
+                  const data = await res.json();
+                  if (data.ok) {
+                    setSettings(data.settings);
+                    saveFlash.flash();
+                  }
+                } catch { /* silent */ }
+              }}
+              className="font-sans text-sm text-clay hover:underline underline-offset-2"
+            >
               Reset to defaults
             </button>
           </div>

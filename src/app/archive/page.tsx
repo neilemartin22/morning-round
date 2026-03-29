@@ -4,22 +4,23 @@ import { useState, useMemo } from "react";
 import { Header } from "@/components/Header";
 import { ArticleCard } from "@/components/ArticleCard";
 import { StreamFilter, type FilterValue } from "@/components/StreamFilter";
-import { MOCK_ARCHIVE_ARTICLES } from "@/lib/mock-data";
+import { useArticles } from "@/lib/use-articles";
 
 export default function ArchivePage() {
+  const { articles, loading } = useArticles("archive");
   const [filter, setFilter] = useState<FilterValue>("all");
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
-    let articles = MOCK_ARCHIVE_ARTICLES;
+    let result = articles;
 
     if (filter !== "all") {
-      articles = articles.filter((a) => a.stream === filter);
+      result = result.filter((a) => a.stream === filter);
     }
 
     if (search.trim()) {
       const q = search.toLowerCase();
-      articles = articles.filter(
+      result = result.filter(
         (a) =>
           a.title.toLowerCase().includes(q) ||
           a.journal?.toLowerCase().includes(q) ||
@@ -28,8 +29,8 @@ export default function ArchivePage() {
       );
     }
 
-    return articles;
-  }, [filter, search]);
+    return result;
+  }, [articles, filter, search]);
 
   return (
     <>
@@ -50,7 +51,16 @@ export default function ArchivePage() {
           className="w-full font-sans text-base bg-transparent border-b border-border-subtle focus:border-umber outline-none py-2 mb-6 text-ink placeholder:text-ink-tertiary"
         />
 
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-bone-warm border border-border-subtle rounded-sm p-5 h-32 animate-pulse"
+              />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
           <p className="font-sans text-sm text-ink-tertiary text-center py-12">
             Nothing here.
           </p>

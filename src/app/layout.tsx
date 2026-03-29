@@ -28,6 +28,16 @@ export const metadata: Metadata = {
   description: "Your daily learning session",
 };
 
+function MorningWarmth() {
+  return (
+    <script
+      dangerouslySetInnerHTML={{
+        __html: `(function(){var h=new Date().getHours();if(h>=5&&h<9){document.documentElement.style.setProperty('--color-bone','#F5F0E6')}})()`,
+      }}
+    />
+  );
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -38,6 +48,9 @@ export default function RootLayout({
       lang="en"
       className={`${sourceSerif.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
+      <head>
+        <MorningWarmth />
+      </head>
       <body className="min-h-full flex flex-col bg-bone text-ink">
         {children}
       </body>

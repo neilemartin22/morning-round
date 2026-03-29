@@ -26,6 +26,7 @@ interface StoredArticle extends Article {
   pmcid?: string;
   diseaseQuery?: string;
   fetchedAt: string;
+  completedAt?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -156,6 +157,14 @@ export async function getAllArticles(): Promise<Article[]> {
 }
 
 /**
+ * Get saved articles.
+ */
+export async function getSavedArticles(): Promise<Article[]> {
+  const all = await readStore();
+  return all.filter((a) => a.status === "saved").map(toArticle);
+}
+
+/**
  * Update the status of an article by its id.
  */
 export async function updateStatus(
@@ -167,6 +176,18 @@ export async function updateStatus(
   if (idx === -1) return null;
 
   all[idx].status = status;
+
+  if (status === "saved") {
+    all[idx].savedAt = new Date().toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  }
+
+  if (status === "completed") {
+    all[idx].completedAt = new Date().toISOString();
+  }
+
   await writeStore(all);
   return toArticle(all[idx]);
 }
@@ -211,6 +232,14 @@ export async function getArticlesByQuery(queryId: string): Promise<Article[]> {
   return all.filter((a) => a.diseaseQuery === queryId).map(toArticle);
 }
 
+/**
+ * Clear all articles from the store.
+ */
+export async function clearAll(): Promise<void> {
+  await ensureDataDir();
+  await writeStore([]);
+}
+
 // ---------------------------------------------------------------------------
 // Strip internal fields when returning Article to consumers
 // ---------------------------------------------------------------------------
@@ -232,6 +261,8 @@ function toArticle(stored: StoredArticle): Article {
     url: stored.url,
     status: stored.status,
     addedByUser: stored.addedByUser,
+    savedAt: stored.savedAt,
+    pmcid: stored.pmcid,
     module: stored.module,
     lessonNumber: stored.lessonNumber,
     totalLessonsInModule: stored.totalLessonsInModule,

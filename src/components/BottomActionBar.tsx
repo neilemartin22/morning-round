@@ -4,25 +4,64 @@ import { useState } from "react";
 import Link from "next/link";
 
 interface BottomActionBarProps {
+  articleId: string;
   nextArticleId: string | null;
+  initialCompleted?: boolean;
+  initialSaved?: boolean;
   onMarkComplete?: () => void;
+  onSave?: () => void;
 }
 
 export function BottomActionBar({
+  articleId,
   nextArticleId,
+  initialCompleted = false,
+  initialSaved = false,
   onMarkComplete,
+  onSave,
 }: BottomActionBarProps) {
-  const [completed, setCompleted] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [completed, setCompleted] = useState(initialCompleted);
+  const [saved, setSaved] = useState(initialSaved);
+
+  async function handleComplete() {
+    const newStatus = !completed;
+    setCompleted(newStatus);
+
+    try {
+      await fetch(`/api/articles/${articleId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus ? "completed" : "in_progress" }),
+      });
+    } catch {
+      // API may not be available (mock data mode) — that's fine
+    }
+
+    if (newStatus && onMarkComplete) onMarkComplete();
+  }
+
+  async function handleSave() {
+    const newSaved = !saved;
+    setSaved(newSaved);
+
+    try {
+      await fetch(`/api/articles/${articleId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newSaved ? "saved" : "in_progress" }),
+      });
+    } catch {
+      // API may not be available (mock data mode) — that's fine
+    }
+
+    if (newSaved && onSave) onSave();
+  }
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-bone/95 backdrop-blur-sm border-t border-border-subtle z-40">
       <div className="mx-auto max-w-[65ch] w-full px-8 py-3 flex items-center justify-between">
         <button
-          onClick={() => {
-            setCompleted(!completed);
-            if (!completed && onMarkComplete) onMarkComplete();
-          }}
+          onClick={handleComplete}
           className={`flex items-center gap-1.5 font-sans text-sm transition-colors ${
             completed
               ? "text-sage"
@@ -56,7 +95,7 @@ export function BottomActionBar({
         </button>
 
         <button
-          onClick={() => setSaved(!saved)}
+          onClick={handleSave}
           className={`flex items-center gap-1.5 font-sans text-sm transition-colors ${
             saved
               ? "text-umber"

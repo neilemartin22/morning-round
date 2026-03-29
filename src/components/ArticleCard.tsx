@@ -1,4 +1,4 @@
-import type { Article } from "@/lib/types";
+import type { Article, ArticleStatus } from "@/lib/types";
 import Link from "next/link";
 
 const STREAM_CONFIG = {
@@ -9,6 +9,7 @@ const STREAM_CONFIG = {
 
 interface ArticleCardProps {
   article: Article;
+  onStatusChange?: (id: string, status: ArticleStatus) => Promise<void>;
 }
 
 export function ArticleCard({ article }: ArticleCardProps) {

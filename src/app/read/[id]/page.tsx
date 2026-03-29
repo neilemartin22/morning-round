@@ -1,10 +1,11 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { ScrollProgress } from "@/components/ScrollProgress";
 import { BottomActionBar } from "@/components/BottomActionBar";
 import { findArticleById, getNextArticleId } from "@/lib/mock-data";
+import type { Article } from "@/lib/types";
 
 const STREAM_LABELS: Record<string, string> = {
   literature: "LITERATURE",
@@ -18,14 +19,70 @@ const STREAM_COLORS: Record<string, string> = {
   lesson: "text-ink-secondary",
 };
 
+function useArticle(id: string) {
+  const [article, setArticle] = useState<Article | undefined>(
+    () => findArticleById(id)
+  );
+  const [nextId] = useState<string | null>(
+    () => getNextArticleId(id)
+  );
+  const [fullTextLoading, setFullTextLoading] = useState(false);
+
+  useEffect(() => {
+    async function fetchFromApi() {
+      try {
+        const res = await fetch(`/api/articles/${id}`);
+        const data = await res.json();
+        if (data.ok && data.article) {
+          setArticle(data.article);
+
+          // If article has a PMCID but no cached full text, fetch it
+          if (data.article.hasFullText && data.article.pmcid && !data.article.fullText) {
+            setFullTextLoading(true);
+            try {
+              const ftRes = await fetch(`/api/pubmed/fulltext/${data.article.pmcid}`);
+              const ftData = await ftRes.json();
+              if (ftData.ok && ftData.html) {
+                setArticle((prev) =>
+                  prev ? { ...prev, fullText: ftData.html } : prev
+                );
+              }
+            } catch {
+              // Full text fetch failed — abstract is still available
+            } finally {
+              setFullTextLoading(false);
+            }
+          }
+        }
+      } catch {
+        // API unavailable — keep mock data
+      }
+
+      // Mark as in_progress
+      try {
+        await fetch(`/api/articles/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "in_progress" }),
+        });
+      } catch {
+        // Mock mode — fine
+      }
+    }
+
+    fetchFromApi();
+  }, [id]);
+
+  return { article, nextId, fullTextLoading };
+}
+
 export default function ReadPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const article = findArticleById(id);
-  const nextId = getNextArticleId(id);
+  const { article, nextId, fullTextLoading } = useArticle(id);
   const [viewMode, setViewMode] = useState<"abstract" | "fulltext">(
     "abstract"
   );
@@ -115,7 +172,7 @@ export default function ReadPage({
         <hr className="border-border-subtle mb-6" />
 
         {/* Abstract / Full Text toggle */}
-        {showToggle && (
+        {(showToggle || fullTextLoading) && (
           <div className="flex gap-4 mb-6">
             <button
               onClick={() => setViewMode("abstract")}
@@ -129,13 +186,14 @@ export default function ReadPage({
             </button>
             <button
               onClick={() => setViewMode("fulltext")}
+              disabled={fullTextLoading}
               className={`font-sans text-sm pb-0.5 transition-colors ${
                 viewMode === "fulltext"
                   ? "text-umber border-b border-umber"
                   : "text-ink-secondary hover:text-ink"
               }`}
             >
-              Full text
+              {fullTextLoading ? "Loading full text\u2026" : "Full text"}
             </button>
           </div>
         )}
@@ -143,7 +201,6 @@ export default function ReadPage({
         {/* Article body */}
         <article className="prose-morning font-serif text-lg leading-relaxed text-ink">
           {bodyContent.split("\n\n").map((paragraph, i) => {
-            // Handle markdown-style headings
             if (paragraph.startsWith("## ")) {
               return (
                 <h2 key={i}>
@@ -158,7 +215,6 @@ export default function ReadPage({
                 </h3>
               );
             }
-            // Handle list items
             if (paragraph.startsWith("- ")) {
               const items = paragraph.split("\n").filter((l) => l.startsWith("- "));
               return (
@@ -169,7 +225,6 @@ export default function ReadPage({
                 </ul>
               );
             }
-            // Regular paragraphs
             return <p key={i}>{paragraph}</p>;
           })}
         </article>
@@ -182,7 +237,12 @@ export default function ReadPage({
         )}
       </main>
 
-      <BottomActionBar nextArticleId={nextId} />
+      <BottomActionBar
+        articleId={article.id}
+        nextArticleId={nextId}
+        initialCompleted={article.status === "completed"}
+        initialSaved={article.status === "saved"}
+      />
     </>
   );
 }

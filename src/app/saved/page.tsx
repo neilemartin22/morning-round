@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { StreamFilter, type FilterValue } from "@/components/StreamFilter";
-import { MOCK_SAVED_ARTICLES } from "@/lib/mock-data";
+import { useArticles } from "@/lib/use-articles";
 import type { Article } from "@/lib/types";
 
 const STREAM_CONFIG = {
@@ -56,12 +56,13 @@ function SavedCard({ article }: { article: Article }) {
 }
 
 export default function SavedPage() {
+  const { articles, loading } = useArticles("saved");
   const [filter, setFilter] = useState<FilterValue>("all");
 
   const filtered = useMemo(() => {
-    if (filter === "all") return MOCK_SAVED_ARTICLES;
-    return MOCK_SAVED_ARTICLES.filter((a) => a.stream === filter);
-  }, [filter]);
+    if (filter === "all") return articles;
+    return articles.filter((a) => a.stream === filter);
+  }, [articles, filter]);
 
   return (
     <>
@@ -74,7 +75,16 @@ export default function SavedPage() {
 
         <StreamFilter active={filter} onChange={setFilter} />
 
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-bone-warm border border-border-subtle rounded-sm p-5 h-32 animate-pulse"
+              />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
           <p className="font-sans text-sm text-ink-tertiary text-center py-12">
             Nothing here.
           </p>

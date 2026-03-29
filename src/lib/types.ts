@@ -19,6 +19,7 @@ export interface Article {
   status: ArticleStatus;
   addedByUser?: boolean;
   savedAt?: string;
+  pmcid?: string;
   // Lesson-specific
   module?: string;
   lessonNumber?: number;
