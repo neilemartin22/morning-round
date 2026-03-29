@@ -1,8 +1,4 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
+import { getDb } from "./db";
 
 export interface Settings {
   pubmed: {
@@ -88,32 +84,53 @@ export const DEFAULT_SETTINGS: Settings = {
   },
 };
 
-async function ensureDataDir(): Promise<void> {
-  try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-  } catch {
-    // already exists
-  }
-}
-
 export async function loadSettings(): Promise<Settings> {
-  await ensureDataDir();
-  try {
-    const raw = await fs.readFile(SETTINGS_FILE, "utf-8");
-    const saved = JSON.parse(raw) as Partial<Settings>;
-    // Merge with defaults so new fields are always present
-    return {
-      pubmed: { ...DEFAULT_SETTINGS.pubmed, ...saved.pubmed },
-      leadership: { ...DEFAULT_SETTINGS.leadership, ...saved.leadership },
-      schedule: { ...DEFAULT_SETTINGS.schedule, ...saved.schedule },
-      lessons: { ...DEFAULT_SETTINGS.lessons, ...saved.lessons },
-    };
-  } catch {
-    return DEFAULT_SETTINGS;
+  const db = await getDb();
+  const result = await db.execute(
+    `SELECT key, value FROM settings`
+  );
+
+  if (result.rows.length === 0) return DEFAULT_SETTINGS;
+
+  const stored: Record<string, unknown> = {};
+  for (const row of result.rows) {
+    const key = row.key as string;
+    const value = row.value as string;
+    try {
+      stored[key] = JSON.parse(value);
+    } catch {
+      stored[key] = value;
+    }
   }
+
+  return {
+    pubmed: {
+      ...DEFAULT_SETTINGS.pubmed,
+      ...(stored.pubmed as Partial<Settings["pubmed"]> | undefined),
+    },
+    leadership: {
+      ...DEFAULT_SETTINGS.leadership,
+      ...(stored.leadership as Partial<Settings["leadership"]> | undefined),
+    },
+    schedule: {
+      ...DEFAULT_SETTINGS.schedule,
+      ...(stored.schedule as Partial<Settings["schedule"]> | undefined),
+    },
+    lessons: {
+      ...DEFAULT_SETTINGS.lessons,
+      ...(stored.lessons as Partial<Settings["lessons"]> | undefined),
+    },
+  };
 }
 
 export async function saveSettings(settings: Settings): Promise<void> {
-  await ensureDataDir();
-  await fs.writeFile(SETTINGS_FILE, JSON.stringify(settings, null, 2), "utf-8");
+  const db = await getDb();
+  const sections = ["pubmed", "leadership", "schedule", "lessons"] as const;
+
+  await db.batch(
+    sections.map((key) => ({
+      sql: `INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`,
+      args: [key, JSON.stringify(settings[key])],
+    }))
+  );
 }
