@@ -18,6 +18,7 @@ export interface Article {
   url?: string;
   status: ArticleStatus;
   addedByUser?: boolean;
+  savedAt?: string;
   // Lesson-specific
   module?: string;
   lessonNumber?: number;
