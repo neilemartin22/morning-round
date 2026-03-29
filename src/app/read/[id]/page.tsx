@@ -106,7 +106,7 @@ export default function ReadPage({
   const streamLabel = STREAM_LABELS[article.stream] ?? "ARTICLE";
   const streamColor = STREAM_COLORS[article.stream] ?? "text-ink-secondary";
 
-  const showToggle = article.hasFullText && article.abstract && article.fullText;
+  const showToggle = article.abstract && article.fullText;
   const bodyContent =
     viewMode === "fulltext" && article.fullText
       ? article.fullText
@@ -156,8 +156,19 @@ export default function ReadPage({
             {" "}
             &middot; {article.readingTimeMin} min read
           </span>
-          {article.hasFullText && (
-            <span> &middot; Full text available</span>
+          {article.url && (
+            <span>
+              {" "}
+              &middot;{" "}
+              <a
+                href={article.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-umber underline underline-offset-2 hover:text-umber-light"
+              >
+                View source
+              </a>
+            </span>
           )}
           {article.lessonNumber && article.totalLessonsInModule && (
             <span>

@@ -18,6 +18,7 @@ export const MOCK_SESSION_ARTICLES: Article[] = [
     tags: ["rectal", "chemoradiation", "phase III"],
     readingTimeMin: 15,
     hasFullText: true,
+    url: "https://pubmed.ncbi.nlm.nih.gov/example-1/",
     status: "unread",
   },
   {
@@ -35,6 +36,7 @@ export const MOCK_SESSION_ARTICLES: Article[] = [
     tags: ["HCC", "SBRT", "phase III"],
     readingTimeMin: 18,
     hasFullText: false,
+    url: "https://pubmed.ncbi.nlm.nih.gov/example-2/",
     status: "unread",
   },
   {
@@ -53,6 +55,7 @@ export const MOCK_SESSION_ARTICLES: Article[] = [
     tags: ["emotional intelligence", "management"],
     readingTimeMin: 8,
     hasFullText: true,
+    url: "https://review.firstround.com/the-real-work-of-leadership",
     status: "unread",
   },
   {
@@ -88,7 +91,8 @@ export const MOCK_SESSION_ARTICLES: Article[] = [
       "Background: Large language models (LLMs) have shown promising results in medical knowledge tasks, but their utility in real-world clinical decision support for radiation oncology has not been prospectively validated across multiple institutions.\n\nMethods: We conducted a prospective validation study across five academic medical centers comparing GPT-4-based clinical decision support recommendations with multidisciplinary tumor board decisions for radiation therapy planning. 450 consecutive cases spanning 12 disease sites were evaluated.\n\nResults: Overall concordance between LLM recommendations and tumor board decisions was 87.1% (392/450). Concordance was highest for breast (94.2%) and prostate (92.8%) and lowest for head and neck (78.3%). In discordant cases, an independent expert panel judged the LLM recommendation as clinically reasonable in 71% of cases, suggesting true disagreement rather than error.\n\nConclusion: LLM-based clinical decision support shows high concordance with expert multidisciplinary recommendations across radiation oncology disease sites. These tools may be most valuable in settings without regular tumor board access.",
     tags: ["AI", "clinical decision support", "validation"],
     readingTimeMin: 12,
-    hasFullText: true,
+    hasFullText: false,
+    url: "https://pubmed.ncbi.nlm.nih.gov/example-3/",
     status: "completed",
   },
 ];
@@ -111,6 +115,7 @@ export const MOCK_ARCHIVE_ARTICLES: Article[] = [
     tags: ["esophageal", "proton therapy", "phase IIB"],
     readingTimeMin: 14,
     hasFullText: false,
+    url: "https://pubmed.ncbi.nlm.nih.gov/example-4/",
     status: "completed",
   },
   {
@@ -127,6 +132,7 @@ export const MOCK_ARCHIVE_ARTICLES: Article[] = [
     tags: ["strategy", "focus", "discipline"],
     readingTimeMin: 10,
     hasFullText: true,
+    url: "https://hbr.org/the-quiet-strategy-of-saying-no",
     status: "completed",
   },
   {
@@ -144,6 +150,7 @@ export const MOCK_ARCHIVE_ARTICLES: Article[] = [
     tags: ["pancreatic", "adaptive RT", "MR-Linac"],
     readingTimeMin: 11,
     hasFullText: true,
+    url: "https://pubmed.ncbi.nlm.nih.gov/example-5/",
     status: "completed",
   },
   {
@@ -176,6 +183,7 @@ export const MOCK_ARCHIVE_ARTICLES: Article[] = [
     tags: ["prostate", "hypofractionation", "phase III"],
     readingTimeMin: 13,
     hasFullText: false,
+    url: "https://pubmed.ncbi.nlm.nih.gov/example-6/",
     status: "completed",
   },
   {
@@ -192,6 +200,7 @@ export const MOCK_ARCHIVE_ARTICLES: Article[] = [
     tags: ["psychological safety", "healthcare culture"],
     readingTimeMin: 9,
     hasFullText: true,
+    url: "https://sloanreview.mit.edu/psychological-safety-high-stakes",
     status: "completed",
   },
 ];
