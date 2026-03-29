@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+:root {
+  --color-bone: #F2EDE4;
+  --color-bone-warm: #EAE3D6;
+  --color-ink: #1C1917;
+  --color-ink-secondary: #57534E;
+  --color-ink-tertiary: #A8A29E;
+  --color-umber: #92400E;
+  --color-umber-light: #D97706;
+  --color-umber-wash: #FEF3C7;
+  --color-sage: #4D7C5E;
+  --color-sage-wash: #ECFDF5;
+  --color-clay: #B45309;
+  --color-border: #D6D3D1;
+  --color-border-subtle: #E7E5E4;
+}
+
+@theme inline {
+  --color-bone: var(--color-bone);
+  --color-bone-warm: var(--color-bone-warm);
+  --color-ink: var(--color-ink);
+  --color-ink-secondary: var(--color-ink-secondary);
+  --color-ink-tertiary: var(--color-ink-tertiary);
+  --color-umber: var(--color-umber);
+  --color-umber-light: var(--color-umber-light);
+  --color-umber-wash: var(--color-umber-wash);
+  --color-sage: var(--color-sage);
+  --color-sage-wash: var(--color-sage-wash);
+  --color-clay: var(--color-clay);
+  --color-border: var(--color-border);
+  --color-border-subtle: var(--color-border-subtle);
+
+  --font-serif: var(--font-source-serif);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+body {
+  background: var(--color-bone);
+  color: var(--color-ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Reading typography */
+.prose-morning h2 {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-ink);
+}
+
+.prose-morning h3 {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-ink);
+}
+
+.prose-morning p {
+  margin-bottom: 1rem;
+}
+
+.prose-morning a {
+  color: var(--color-umber);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose-morning pre {
+  font-family: var(--font-mono), Consolas, monospace;
+  font-size: 0.875rem;
+  line-height: 1.625;
+  background: #E8E0D0;
+  border-left: 3px solid var(--color-border);
+  padding: 1rem;
+  overflow-x: auto;
+  border-radius: 0;
+  margin: 1rem 0;
+}
