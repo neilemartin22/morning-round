@@ -57,66 +57,95 @@ export interface DiseaseQuery {
   query: string;
 }
 
+// Top 20 cancer journals by impact factor + Red/Green rad onc journals
+const JOURNAL_FILTER = [
+  '"CA Cancer J Clin"[ta]',
+  '"N Engl J Med"[ta]',
+  '"Lancet"[ta]',
+  '"BMJ"[ta]',
+  '"Nat Rev Clin Oncol"[ta]',
+  '"Nat Rev Cancer"[ta]',
+  '"Nature"[ta]',
+  '"Cell"[ta]',
+  '"Nat Med"[ta]',
+  '"JAMA"[ta]',
+  '"Lancet Oncol"[ta]',
+  '"Ann Oncol"[ta]',
+  '"Cancer Cell"[ta]',
+  '"J Clin Oncol"[ta]',
+  '"Nat Cancer"[ta]',
+  '"Cancer Discov"[ta]',
+  '"JAMA Oncol"[ta]',
+  '"Mol Cancer"[ta]',
+  '"J Thorac Oncol"[ta]',
+  '"Clin Cancer Res"[ta]',
+  '"Int J Radiat Oncol Biol Phys"[ta]',
+  '"Radiother Oncol"[ta]',
+  '"Pract Radiat Oncol"[ta]',
+].join(" OR ");
+
+const JOURNAL_CLAUSE = `(${JOURNAL_FILTER})`;
+
 export const DISEASE_QUERIES: DiseaseQuery[] = [
   {
     id: "esophageal",
     label: "Esophageal",
     query:
-      '("esophageal neoplasms"[MeSH] OR "esophageal cancer"[tiab]) AND ("radiotherapy"[MeSH] OR "radiation therapy"[tiab] OR "chemoradiation"[tiab])',
+      `("esophageal neoplasms"[MeSH] OR "esophageal cancer"[tiab]) AND ("radiotherapy"[MeSH] OR "radiation therapy"[tiab] OR "chemoradiation"[tiab]) AND ${JOURNAL_CLAUSE}`,
   },
   {
     id: "pancreatic",
     label: "Pancreatic",
     query:
-      '("pancreatic neoplasms"[MeSH] OR "pancreatic cancer"[tiab]) AND ("radiotherapy"[MeSH] OR "radiation therapy"[tiab] OR "SBRT"[tiab])',
+      `("pancreatic neoplasms"[MeSH] OR "pancreatic cancer"[tiab]) AND ("radiotherapy"[MeSH] OR "radiation therapy"[tiab] OR "SBRT"[tiab]) AND ${JOURNAL_CLAUSE}`,
   },
   {
     id: "hcc",
     label: "HCC",
     query:
-      '("carcinoma, hepatocellular"[MeSH] OR "hepatocellular carcinoma"[tiab] OR "HCC"[tiab]) AND ("radiotherapy"[MeSH] OR "radiation therapy"[tiab] OR "SBRT"[tiab])',
+      `("carcinoma, hepatocellular"[MeSH] OR "hepatocellular carcinoma"[tiab] OR "HCC"[tiab]) AND ("radiotherapy"[MeSH] OR "radiation therapy"[tiab] OR "SBRT"[tiab]) AND ${JOURNAL_CLAUSE}`,
   },
   {
     id: "cholangiocarcinoma",
     label: "Cholangiocarcinoma",
     query:
-      '("cholangiocarcinoma"[MeSH] OR "cholangiocarcinoma"[tiab]) AND ("radiotherapy"[MeSH] OR "radiation therapy"[tiab] OR "SBRT"[tiab])',
+      `("cholangiocarcinoma"[MeSH] OR "cholangiocarcinoma"[tiab]) AND ("radiotherapy"[MeSH] OR "radiation therapy"[tiab] OR "SBRT"[tiab]) AND ${JOURNAL_CLAUSE}`,
   },
   {
     id: "rectal",
     label: "Rectal",
     query:
-      '("rectal neoplasms"[MeSH] OR "rectal cancer"[tiab]) AND ("radiotherapy"[MeSH] OR "radiation therapy"[tiab] OR "chemoradiation"[tiab] OR "total neoadjuvant"[tiab])',
+      `("rectal neoplasms"[MeSH] OR "rectal cancer"[tiab]) AND ("radiotherapy"[MeSH] OR "radiation therapy"[tiab] OR "chemoradiation"[tiab] OR "total neoadjuvant"[tiab]) AND ${JOURNAL_CLAUSE}`,
   },
   {
     id: "anal",
     label: "Anal",
     query:
-      '("anus neoplasms"[MeSH] OR "anal cancer"[tiab]) AND ("radiotherapy"[MeSH] OR "radiation therapy"[tiab] OR "chemoradiation"[tiab])',
+      `("anus neoplasms"[MeSH] OR "anal cancer"[tiab]) AND ("radiotherapy"[MeSH] OR "radiation therapy"[tiab] OR "chemoradiation"[tiab]) AND ${JOURNAL_CLAUSE}`,
   },
   {
     id: "prostate",
     label: "Prostate",
     query:
-      '("prostatic neoplasms"[MeSH] OR "prostate cancer"[tiab]) AND ("radiotherapy"[MeSH] OR "radiation therapy"[tiab] OR "brachytherapy"[tiab] OR "SBRT"[tiab])',
+      `("prostatic neoplasms"[MeSH] OR "prostate cancer"[tiab]) AND ("radiotherapy"[MeSH] OR "radiation therapy"[tiab] OR "brachytherapy"[tiab] OR "SBRT"[tiab]) AND ${JOURNAL_CLAUSE}`,
   },
   {
     id: "rcc",
     label: "RCC",
     query:
-      '("carcinoma, renal cell"[MeSH] OR "renal cell carcinoma"[tiab] OR "kidney neoplasms"[MeSH]) AND ("radiotherapy"[MeSH] OR "radiation therapy"[tiab] OR "SBRT"[tiab])',
+      `("carcinoma, renal cell"[MeSH] OR "renal cell carcinoma"[tiab] OR "kidney neoplasms"[MeSH]) AND ("radiotherapy"[MeSH] OR "radiation therapy"[tiab] OR "SBRT"[tiab]) AND ${JOURNAL_CLAUSE}`,
   },
   {
     id: "bladder",
     label: "Bladder",
     query:
-      '("urinary bladder neoplasms"[MeSH] OR "bladder cancer"[tiab]) AND ("radiotherapy"[MeSH] OR "radiation therapy"[tiab] OR "chemoradiation"[tiab] OR "bladder preservation"[tiab])',
+      `("urinary bladder neoplasms"[MeSH] OR "bladder cancer"[tiab]) AND ("radiotherapy"[MeSH] OR "radiation therapy"[tiab] OR "chemoradiation"[tiab] OR "bladder preservation"[tiab]) AND ${JOURNAL_CLAUSE}`,
   },
   {
     id: "ai-medicine",
     label: "AI in Medicine",
     query:
-      '("artificial intelligence"[MeSH] OR "machine learning"[tiab] OR "deep learning"[tiab] OR "large language model"[tiab]) AND ("N Engl J Med"[Journal] OR "Lancet"[Journal] OR "JAMA"[Journal] OR "BMJ"[Journal] OR "Nat Med"[Journal])',
+      `("artificial intelligence"[MeSH] OR "machine learning"[tiab] OR "deep learning"[tiab] OR "large language model"[tiab]) AND ${JOURNAL_CLAUSE}`,
   },
 ];
 
