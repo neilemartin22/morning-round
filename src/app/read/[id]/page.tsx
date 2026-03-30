@@ -251,7 +251,6 @@ export default function ReadPage({
       <BottomActionBar
         articleId={article.id}
         nextArticleId={nextId}
-        initialCompleted={article.status === "completed"}
         initialSaved={article.status === "saved"}
       />
     </>

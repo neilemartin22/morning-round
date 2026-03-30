@@ -2,54 +2,42 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 interface BottomActionBarProps {
   articleId: string;
   nextArticleId: string | null;
-  initialCompleted?: boolean;
   initialSaved?: boolean;
   onMarkComplete?: () => void;
-  onSave?: () => void;
 }
 
 export function BottomActionBar({
   articleId,
   nextArticleId,
-  initialCompleted = false,
   initialSaved = false,
   onMarkComplete,
-  onSave,
 }: BottomActionBarProps) {
   const router = useRouter();
-  const [completed, setCompleted] = useState(initialCompleted);
   const [saved, setSaved] = useState(initialSaved);
 
-  async function handleComplete() {
-    const newStatus = !completed;
-    setCompleted(newStatus);
-
+  async function markComplete() {
     try {
       await fetch(`/api/articles/${articleId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus ? "completed" : "in_progress" }),
+        body: JSON.stringify({ status: "completed" }),
       });
     } catch {
-      // API may not be available (mock data mode) — that's fine
+      // silent
     }
+    if (onMarkComplete) onMarkComplete();
+  }
 
-    if (newStatus && onMarkComplete) onMarkComplete();
-
-    // Auto-advance after marking complete
-    if (newStatus) {
-      setTimeout(() => {
-        if (nextArticleId) {
-          router.push(`/read/${nextArticleId}`);
-        } else {
-          router.push("/");
-        }
-      }, 600);
+  function handleNext() {
+    markComplete();
+    if (nextArticleId) {
+      router.push(`/read/${nextArticleId}`);
+    } else {
+      router.push("/");
     }
   }
 
@@ -64,49 +52,13 @@ export function BottomActionBar({
         body: JSON.stringify({ status: newSaved ? "saved" : "in_progress" }),
       });
     } catch {
-      // API may not be available (mock data mode) — that's fine
+      // silent
     }
-
-    if (newSaved && onSave) onSave();
   }
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-bone/95 backdrop-blur-sm border-t border-border-subtle z-40">
       <div className="mx-auto max-w-[65ch] w-full px-8 py-3 flex items-center justify-between">
-        <button
-          onClick={handleComplete}
-          className={`flex items-center gap-1.5 font-sans text-sm transition-colors ${
-            completed
-              ? "text-sage"
-              : "text-ink-secondary hover:text-ink"
-          }`}
-        >
-          {completed ? (
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          ) : (
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4.5 12.75l6 6 9-13.5"
-              />
-            </svg>
-          )}
-          {completed ? "Completed" : "Mark complete"}
-        </button>
-
         <button
           onClick={handleSave}
           className={`flex items-center gap-1.5 font-sans text-sm transition-colors ${
@@ -137,34 +89,25 @@ export function BottomActionBar({
           {saved ? "Saved" : "Save for later"}
         </button>
 
-        {nextArticleId ? (
-          <Link
-            href={`/read/${nextArticleId}`}
-            className="flex items-center gap-1 font-sans text-sm text-ink-secondary hover:text-ink transition-colors"
+        <button
+          onClick={handleNext}
+          className="flex items-center gap-1 font-sans text-sm text-ink hover:text-umber transition-colors"
+        >
+          {nextArticleId ? "Next" : "Done"}
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
           >
-            Next article
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M8.25 4.5l7.5 7.5-7.5 7.5"
-              />
-            </svg>
-          </Link>
-        ) : (
-          <Link
-            href="/"
-            className="flex items-center gap-1 font-sans text-sm text-ink-secondary hover:text-ink transition-colors"
-          >
-            Back to session
-          </Link>
-        )}
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M8.25 4.5l7.5 7.5-7.5 7.5"
+            />
+          </svg>
+        </button>
       </div>
     </div>
   );
