@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 interface BottomActionBarProps {
@@ -20,6 +21,7 @@ export function BottomActionBar({
   onMarkComplete,
   onSave,
 }: BottomActionBarProps) {
+  const router = useRouter();
   const [completed, setCompleted] = useState(initialCompleted);
   const [saved, setSaved] = useState(initialSaved);
 
@@ -38,6 +40,17 @@ export function BottomActionBar({
     }
 
     if (newStatus && onMarkComplete) onMarkComplete();
+
+    // Auto-advance after marking complete
+    if (newStatus) {
+      setTimeout(() => {
+        if (nextArticleId) {
+          router.push(`/read/${nextArticleId}`);
+        } else {
+          router.push("/");
+        }
+      }, 600);
+    }
   }
 
   async function handleSave() {
