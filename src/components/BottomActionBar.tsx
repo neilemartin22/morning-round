@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 interface BottomActionBarProps {
@@ -19,7 +19,7 @@ export function BottomActionBar({
   const router = useRouter();
   const [saved, setSaved] = useState(initialSaved);
 
-  async function markComplete() {
+  const markComplete = useCallback(async () => {
     try {
       await fetch(`/api/articles/${articleId}`, {
         method: "PATCH",
@@ -30,31 +30,42 @@ export function BottomActionBar({
       // silent
     }
     if (onMarkComplete) onMarkComplete();
-  }
+  }, [articleId, onMarkComplete]);
 
-  function handleNext() {
+  const handleNext = useCallback(() => {
     markComplete();
     if (nextArticleId) {
       router.push(`/read/${nextArticleId}`);
     } else {
       router.push("/");
     }
-  }
+  }, [markComplete, nextArticleId, router]);
 
-  async function handleSave() {
-    const newSaved = !saved;
-    setSaved(newSaved);
-
-    try {
-      await fetch(`/api/articles/${articleId}`, {
+  const handleSave = useCallback(() => {
+    setSaved((prev) => {
+      const newSaved = !prev;
+      fetch(`/api/articles/${articleId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newSaved ? "saved" : "in_progress" }),
-      });
-    } catch {
-      // silent
+      }).catch(() => {});
+      return newSaved;
+    });
+  }, [articleId]);
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === "j" || e.key === "n") {
+        handleNext();
+      }
+      if (e.key === "s") {
+        handleSave();
+      }
     }
-  }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [handleNext, handleSave]);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-bone/95 backdrop-blur-sm border-t border-border-subtle z-40">
