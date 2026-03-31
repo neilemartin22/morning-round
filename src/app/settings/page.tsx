@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import type { Settings } from "@/lib/settings-store";
+import { DropZone } from "@/components/DropZone";
 
 function SavedIndicator({ show }: { show: boolean }) {
   return (
@@ -249,38 +250,9 @@ export default function SettingsPage() {
           </h2>
           <hr className="border-border-subtle mb-5" />
 
-          <label className="block font-sans text-sm text-ink-secondary mb-1.5">
-            Reading folder
-          </label>
-          <div className="flex items-center gap-3 mb-2">
-            <input
-              type="text"
-              value={settings.leadership.readingFolder}
-              onChange={(e) =>
-                update((s) => ({
-                  ...s,
-                  leadership: {
-                    ...s.leadership,
-                    readingFolder: e.target.value,
-                  },
-                }))
-              }
-              className="flex-1 font-mono text-sm bg-transparent border-b border-border focus:border-umber outline-none py-1.5 text-ink"
-            />
-            <button className="font-sans text-xs text-umber border border-border-subtle rounded-sm px-2.5 py-1 hover:border-border transition-colors">
-              Browse
-            </button>
+          <div className="mb-4">
+            <DropZone />
           </div>
-          <p className="font-sans text-xs text-ink-tertiary mb-4">
-            Drop PDFs or saved web pages into the{" "}
-            <span className="font-mono">inbox/</span> subfolder. The app will
-            index them and add them to your reading queue.
-          </p>
-          <p className="font-sans text-xs text-ink-tertiary mb-4">
-            <span className="font-mono">inbox/</span> &middot;{" "}
-            <span className="font-mono">processed/</span> &middot;{" "}
-            <span className="font-mono">failed/</span>
-          </p>
 
           <div className="flex items-center gap-2 mb-2">
             <span className="font-sans text-sm text-ink-secondary">
