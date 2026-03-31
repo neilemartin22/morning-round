@@ -41,11 +41,10 @@ export async function POST(request: NextRequest) {
         let title = "";
 
         if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
-          const buffer = Buffer.from(await file.arrayBuffer());
-          // eslint-disable-next-line @typescript-eslint/no-require-imports
-          const pdf = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
-          const data = await pdf(buffer);
-          text = data.text;
+          const { extractText } = await import("unpdf");
+          const arrayBuffer = await file.arrayBuffer();
+          const result = await extractText(new Uint8Array(arrayBuffer));
+          text = Array.isArray(result.text) ? result.text.join("\n") : result.text;
           title = extractTitle(text, file.name);
         } else if (
           file.type === "text/html" ||
