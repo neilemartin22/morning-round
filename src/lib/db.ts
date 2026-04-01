@@ -40,9 +40,19 @@ export async function getDb() {
         key TEXT PRIMARY KEY,
         value TEXT NOT NULL
       )`,
+      `CREATE TABLE IF NOT EXISTS pdf_queue (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        filename TEXT NOT NULL,
+        pdf_data BLOB NOT NULL,
+        status TEXT DEFAULT 'queued',
+        queued_at TEXT NOT NULL,
+        presented_at TEXT
+      )`,
       `CREATE INDEX IF NOT EXISTS idx_articles_status ON articles(status)`,
       `CREATE INDEX IF NOT EXISTS idx_articles_pmid ON articles(pmid)`,
       `CREATE INDEX IF NOT EXISTS idx_articles_fetched ON articles(fetched_at)`,
+      `CREATE INDEX IF NOT EXISTS idx_pdf_queue_status ON pdf_queue(status)`,
     ]);
     initialized = true;
   }

@@ -149,7 +149,40 @@ export async function getSessionArticles(): Promise<Article[]> {
     sql: `SELECT * FROM articles WHERE fetched_at >= ? ORDER BY fetched_at DESC`,
     args: [weekAgo.toISOString()],
   });
-  return (result.rows as unknown as ArticleRow[]).map(rowToArticle);
+  const articles = (result.rows as unknown as ArticleRow[]).map(rowToArticle);
+
+  // Include one queued PDF per session
+  const pdfResult = await db.execute(
+    `SELECT id, title, filename FROM pdf_queue WHERE status = 'queued' ORDER BY queued_at ASC LIMIT 1`
+  );
+  if (pdfResult.rows.length > 0) {
+    const pdf = pdfResult.rows[0] as unknown as {
+      id: string;
+      title: string;
+      filename: string;
+    };
+    // Mark it as presented
+    await db.execute({
+      sql: `UPDATE pdf_queue SET status = 'presented', presented_at = ? WHERE id = ?`,
+      args: [new Date().toISOString(), pdf.id],
+    });
+    // Add as a leadership article pointing to the PDF
+    articles.unshift({
+      id: pdf.id,
+      stream: "leadership",
+      title: pdf.title,
+      publishedAt: "",
+      excerpt: pdf.filename,
+      tags: [],
+      readingTimeMin: 10,
+      hasFullText: false,
+      url: `/api/pdf/${pdf.id}`,
+      status: "unread",
+      addedByUser: true,
+    });
+  }
+
+  return articles;
 }
 
 export async function getAllArticles(): Promise<Article[]> {

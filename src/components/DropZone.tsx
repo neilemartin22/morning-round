@@ -84,7 +84,7 @@ export function DropZone({ onUploadComplete }: DropZoneProps) {
             : "Drop PDFs, HTML, or text files here"}
       </p>
       <p className="font-sans text-xs text-ink-tertiary mt-1">
-        Added as leadership reading
+        PDFs are queued and presented one per session
       </p>
     </div>
   );
