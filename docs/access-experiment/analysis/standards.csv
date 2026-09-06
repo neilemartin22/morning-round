@@ -1,0 +1,9 @@
+persona_id,slot_consult,slot_sim,slot_planning,slot_machine,std_consult_bd,std_sim_bd,std_plan_bd,std_start_bd
+P1,palliative_any,standard_ct,simple,any_linac,2,0,0,1
+P2,GYN,standard_ct,standard,any_linac,7,7,5,5
+P3,GU,standard_ct,standard,any_linac,10,10,5,5
+P4,breast,standard_ct,standard,any_linac,10,5,5,5
+P5,head_neck,mask_contrast,complex,any_linac,5,10,7,3
+P6,thoracic,four_d_ct,complex,sbrt_capable,10,5,7,5
+P7,CNS,mask_mri,complex,srs_platform,3,3,5,2
+P8,head_neck,mask_contrast,complex,proton,10,10,7,3

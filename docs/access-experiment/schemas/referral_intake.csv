@@ -1,0 +1,12 @@
+field,type,required,allowed_values_or_format,notes
+site,choice,yes,site code,Site the referral was received at
+contact_date,date,yes,YYYY-MM-DD,Date of first contact
+contact_channel,choice,yes,phone | fax | e_referral | in_basket | walk_in | other,
+source,choice,yes,internal_mgb | external_physician | self_referral | inpatient | other,
+disease_site,choice,yes,GU | breast | thoracic | head_neck | CNS | GI | GYN | heme | palliative | other,
+urgency_flag,choice,yes,emergency | urgent | routine,As judged at intake
+first_offered_consult_date,date,yes if a date was offered,YYYY-MM-DD,The first date the scheduler actually offered
+accepted_consult_date,date,if scheduled,YYYY-MM-DD,
+disposition,choice,yes,scheduled | declined_wait | declined_location | declined_preference | redirected_other_site | lost_to_follow_up | pending,"declined_wait is the number the department's framing is about. Update pending rows when resolved."
+callback_business_days,integer,no,count,Business days from contact to first callback if the patient was not scheduled on the first call
+notes,text,no,free text,

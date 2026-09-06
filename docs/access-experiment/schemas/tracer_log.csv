@@ -1,0 +1,17 @@
+field,type,required,allowed_values_or_format,notes
+site,choice,yes,site code,
+patient_key,text,yes,study ID (not MRN),Keep the crosswalk to MRN locally at the site; never in the shared sheet
+persona_class,choice,yes,P1 | P2 | P3 | P4 | P5 | P6 | P7 | P8 | other,Assigned at consult using the rule sheet in personas.md
+disease_site,choice,yes,GU | breast | thoracic | head_neck | CNS | GI | GYN | heme | palliative | other,
+urgency_tier,choice,yes,emergency | urgent | semi_urgent | routine,Assigned at intake or consult
+referral_date,date,yes,YYYY-MM-DD,First contact with the department (call, fax, e-referral, in-basket)
+consult_date,date,when it happens,YYYY-MM-DD,
+decision_date,date,when it happens,YYYY-MM-DD,Date the decision to treat with RT was made; often equals consult_date
+sim_date,date,when it happens,YYYY-MM-DD,
+plan_approved_date,date,when it happens,YYYY-MM-DD,Physician approval of the final plan
+first_fraction_date,date,when it happens,YYYY-MM-DD,
+status,choice,yes,in_pathway | treated | not_treated_medical | not_treated_patient_choice | transferred_other_site | transferred_outside,
+delay_stage,choice,if any interval exceeded standard,referral_to_consult | consult_to_sim | sim_to_plan | plan_to_start,The interval that was most out of standard
+delay_owner,choice,if any interval exceeded standard,internal | patient | outside_input,"internal = slots, staffing, handoffs. patient = second opinion, travel, chose to wait. outside_input = path, imaging, dental, insurance, another service. This field separates a coordination problem from a patient decision."
+delay_reason_code,choice,if any interval exceeded standard,no_slot | physician_unavailable | staffing | equipment_down | waiting_upstream | waiting_outside_input | patient_choice | medical | other,Biggest single reason for that interval
+notes,text,no,free text,

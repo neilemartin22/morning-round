@@ -1,0 +1,12 @@
+field,type,required,allowed_values_or_format,notes
+response_date,date,yes,YYYY-MM-DD,Auto-filled by the form; the day the question is answered
+site,choice,yes,one code per site (fill in at setup),Use short stable codes; do not rename mid-study
+stage,choice,yes,consult | sim | planning | machine,Respondent answers only their own stage
+respondent_role,choice,yes,scheduler_lead | sim_lead | chief_dosimetrist | chief_therapist | other,
+slot_type,choice,yes,see personas.md section 3 for the list per stage,Personas are consolidated into slot types so each question is asked once
+persona_ids,text,yes,e.g. P3 or P1;P2,Which personas this slot type covers; pre-filled per slot type
+next_available_date,date,yes,YYYY-MM-DD,"Consult and sim: THIRD next available slot. Planning: date an approved plan would be ready for a case handed over today. Machine: date a new course of this class could start."
+under_standard_process,choice,yes,yes | no,"no = the date above requires overbooking, a favor, or staff staying late. Answer honestly; this field is the point."
+reason_code,choice,only if out of standard,no_slot | physician_unavailable | staffing | equipment_down | waiting_upstream | waiting_outside_input | other,Pick the single biggest reason
+queue_depth,integer,planning stage only,count,Plans currently waiting at any step before approval; one number
+comment,text,no,free text,One line max
