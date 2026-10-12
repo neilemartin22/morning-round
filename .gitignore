@@ -42,3 +42,6 @@ next-env.d.ts
 
 # local article store
 /data/
+
+# local SQLite dev database
+local.db
