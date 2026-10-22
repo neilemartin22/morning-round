@@ -1,0 +1,38 @@
+name: PubMed Fetch
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger PubMed fetch
+        id: fetch
+        run: |
+          RESPONSE=$(curl -sS -X POST https://morning-round.vercel.app/api/pubmed/fetch \
+            -H "Content-Type: application/json" \
+            -w '\n{"http_code":%{http_code}}')
+          echo "response=$RESPONSE"
+          echo "fetch_response<<EOF" >> $GITHUB_OUTPUT
+          echo "$RESPONSE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Verify session articles
+        id: verify
+        run: |
+          RESPONSE=$(curl -sS https://morning-round.vercel.app/api/articles?view=session \
+            -w '\n{"http_code":%{http_code}}')
+          echo "response=$RESPONSE"
+          echo "verify_response<<EOF" >> $GITHUB_OUTPUT
+          echo "$RESPONSE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Report results
+        run: |
+          echo "=== Fetch Response ==="
+          echo '${{ steps.fetch.outputs.fetch_response }}'
+          echo "=== Session Articles ==="
+          echo '${{ steps.verify.outputs.verify_response }}'
